@@ -1444,20 +1444,15 @@
       // Are we at the opening or closing char
       var forwards = inArray(symb, ['(', '[', '{']);
 
-      var reverseSymb = (function(sym) {
-        switch (sym) {
-          case '(' : return ')';
-          case '[' : return ']';
-          case '{' : return '}';
-          case ')' : return '(';
-          case ']' : return '[';
-          case '}' : return '{';
-          default : return null;
-        }
-      })(symb);
+      var reverseSymb = ({
+        '(': ')', ')': '(',
+        '[': ']'. ']': '[',
+        '{': '}', '}': '{'})[symb];
 
       // Couldn't find a matching symbol, abort
-      if (!reverseSymb) return cur;
+      if (!reverseSymb) {
+        return cur;
+      }
 
       // Tracking our imbalance in open/closing symbols. An opening symbol will
       // be the first thing we pick up if moving forward, this isn't true moving
