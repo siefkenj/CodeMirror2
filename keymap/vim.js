@@ -803,12 +803,8 @@
         var repeat = motionArgs.repeat;
         var curEnd = moveToCharacter(cm, repeat, motionArgs.forward,
             motionArgs.selectedCharacter);
-        if (motionArgs.forward) {
-          curEnd.ch--;
-        }
-        else {
-          curEnd.ch++;
-        }
+        var increment = motionArgs.forward ? 1 : -1
+        curEnd.ch += increment;
         return curEnd;
       },
       moveToCharacter: function(cm, motionArgs) {
@@ -843,9 +839,8 @@
         var symbol = cm.getLine(cursor.line).charAt(cursor.ch);
         if (isMatchableSymbol(symbol)) {
           return findMatchedSymbol(cm, cm.getCursor(), motionArgs.symbol);
-        } else {
-          return cursor;
         }
+        return cursor;
       },
       moveToStartOfLine: function(cm) {
         var cursor = cm.getCursor();
@@ -1060,11 +1055,9 @@
         var curPosFinal;
         var idx;
         if (linewise && actionArgs.after) {
-          curPosFinal = makeCursor(cur.line + 1,
-              findFirstNonWhiteSpaceCharacter(cm.getLine(cur.line + 1)));
+          curPosFinal = {line: cur.line + 1, ch: findFirstNonWhiteSpaceCharacter(cm.getLine(cur.line + 1))};
         } else if (linewise && !actionArgs.after) {
-          curPosFinal = makeCursor(cur.line,
-              findFirstNonWhiteSpaceCharacter(cm.getLine(cur.line)));
+          curPosFinal = {line: cur.line, ch: findFirstNonWhiteSpaceCharacter(cm.getLine(cur.line))};
         } else if (!linewise && actionArgs.after) {
           idx = cm.indexFromPos(cur);
           curPosFinal = cm.posFromIndex(idx + text.length - 1);
@@ -1158,9 +1151,6 @@
       }
       return ret;
     }
-    function makeCursor(line, ch) {
-      return { line: line, ch: ch };
-    }
     function offsetCursor(cur, offsetLine, offsetCh) {
       return { line: cur.line + offsetLine, ch: cur.ch + offsetCh };
     }
@@ -1208,9 +1198,8 @@
         return true;
       } else if (cur1.line == cur2.line && cur1.ch < cur2.ch) {
         return true;
-      } else {
-        return false;
       }
+      return false;
     }
     function lineLength(cm, lineNum) {
       return cm.getLine(lineNum).length;
@@ -1265,7 +1254,7 @@
           (!bigWord) ? /[^a-zA-Z0-9]/ : /\s/) + 1;
       var end = motions.moveByWords(cm, { repeat: 1, forward: true,
           wordEnd: true, bigWord: bigWord });
-      end.ch += inclusive ? 1 : 0 ;
+      end.ch += inclusive ? 1 : 0;
       return {start: {line: cur.line, ch: start}, end: end };
     }
 
@@ -1404,8 +1393,7 @@
         }
         start = idx;
       }
-      return { line: cm.getCursor().line,
-        ch: idx };
+      return { line: cm.getCursor().line, ch: idx };
     }
 
     function moveToColumn(cm, repeat) {
