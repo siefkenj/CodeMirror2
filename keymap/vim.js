@@ -1446,7 +1446,7 @@
 
       var reverseSymb = ({
         '(': ')', ')': '(',
-        '[': ']'. ']': '[',
+        '[': ']', ']': '[',
         '{': '}', '}': '{'})[symb];
 
       // Couldn't find a matching symbol, abort
@@ -1454,45 +1454,32 @@
         return cur;
       }
 
-      // Tracking our imbalance in open/closing symbols. An opening symbol will
-      // be the first thing we pick up if moving forward, this isn't true moving
-      // backwards
-      var disBal = forwards ? 0 : 1;
-
-      var currLine;
-      while (true) {
-        if (line == cur.line) {
-          // First pass, do some special stuff
-          currLine = forwards ? cm.getLine(line).substr(cur.ch).split('') :
-            cm.getLine(line).substr(0,cur.ch).split('').reverse();
-        } else {
-          currLine = forwards ? cm.getLine(line).split('') :
-            cm.getLine(line).split('').reverse();
+      // set our increment to move forward (+1) or backwards (-1)
+      // depending on which bracket we're matching
+      var increment = ({'(': 1, '{': 1, '[': 1})[symb] || -1;
+      var depth = 1, nextCh = symb, index = cur.ch, lineText = cm.getLine(line);
+      // Simple search for closing paren--just count openings and closings till
+      // we find our match
+      // TODO: use info from CodeMirror to ignore closing brackets in comments and
+      // quotes, etc.
+      while (nextCh && depth > 0) {
+        index += increment;
+        nextCh = lineText.charAt(index);
+        if (!nextCh) {
+          line += increment;
+          index = 0;
+          lineText = cm.getLine(line) || '';
+          nextCh = lineText.charAt(index);
         }
-
-        for (var index = 0; index < currLine.length; index++) {
-          if (currLine[index] == symb) {
-            disBal++;
-          } else if (currLine[index] == reverseSymb) {
-            disBal--;
-          }
-
-          if (disBal === 0) {
-            if (forwards && cur.line == line) {
-              return { line: line, ch: index + cur.ch};
-            } else if (forwards) {
-              return { line: line, ch: index};
-            } else {
-              return {line: line, ch: currLine.length - index - 1 };
-            }
-          }
+        if (nextCh === symb) {
+            depth++;
+        } else if (nextCh === reverseSymb) {
+            depth--;
         }
+      }
 
-        if (forwards) {
-          line++;
-        } else {
-          line--;
-        }
+      if (nextCh) {
+        return {line: line, ch: index};
       }
       return cur;
     }
